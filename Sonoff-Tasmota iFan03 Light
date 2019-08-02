@@ -1,0 +1,123 @@
+
+// Hubitat driver for controlling Sonoff iFan03 Light
+// Version 1.0.0
+
+metadata {
+	definition(name: "Sonoff-Tasmota iFan03 Light", namespace: "damondins", author: "damondins") {
+		capability "Actuator"
+		capability "Refresh"
+    capability "Switch"
+		capability "Configuration"
+   
+	}
+
+	preferences {		
+		section("Sonoff Host") {
+            input(name: "ipAddress", type: "string", title: "IP Address", displayDuringSetup: true, required: true)
+			input(name: "port", type: "number", title: "Port", displayDuringSetup: true, required: true, defaultValue: 80)
+		}
+
+		section("Authentication") {
+			input(name: "username", type: "string", title: "Username", displayDuringSetup: false, required: false)
+			input(name: "password", type: "password", title: "Password (sent cleartext)", displayDuringSetup: false, required: false)
+		}
+	}
+}
+
+def parse(String description) {
+	def message = parseLanMessage(description)
+	def isParsed = false;
+
+	// parse result from current formats
+	def resultJson = {}
+	if (message?.json) {
+		// current json data format
+		resultJson = message.json
+        log.debug resultJson
+	}
+
+	// determine switch state
+	if ((resultJson?."POWER" in ["ON", 1, "1"])) {
+		setSwitchState(true)
+	}
+	else if ((resultJson?."POWER" in ["OFF", 0, "0"])) {
+		setSwitchState(false)
+	}
+	else {
+		log.error "Unable to parse POWER state"
+	}
+    
+}
+
+def setSwitchState(Boolean on) {
+	sendEvent(name: "switch", value: on ? "on" : "off")
+}
+
+def push() {
+	sendCommand("Power", "Toggle")
+}
+
+def on() {
+	sendCommand("Power", "On")
+}
+
+def off() {
+	sendCommand("Power", "Off")
+}
+
+def poll() {
+	sendCommand("State", null)
+}
+
+def refresh() {
+	sendCommand("State", null)
+}
+
+private def sendCommand(String command, payload) {
+    sendCommand(command, payload.toString())
+}
+
+private def sendCommand(String command, String payload) {
+	log.debug "sendCommand(${command}:${payload}) to device at $ipAddress:$port"
+
+	if (!ipAddress || !port) {
+		log.warn "aborting. ip address or port of device not set"
+		return null;
+	}
+	def hosthex = convertIPtoHex(ipAddress)
+	def porthex = convertPortToHex(port)
+
+	def path = "/cm"
+	if (payload){
+		path += "?cmnd=${command}%20${payload}"
+	}
+	else{
+		path += "?cmnd=${command}"
+	}
+
+	if (username){
+		path += "&user=${username}"
+		if (password){
+			path += "&password=${password}"
+		}
+	}
+
+	def result = new hubitat.device.HubAction(
+		method: "GET",
+		path: path,
+		headers: [
+			HOST: "${ipAddress}:${port}"
+		]
+	)
+	return result
+}
+
+private String convertIPtoHex(ipAddress) { 
+	String hex = ipAddress.tokenize( '.' ).collect {  String.format( '%02x', it.toInteger() ) }.join()
+	return hex
+}
+
+private String convertPortToHex(port) {
+	String hexport = port.toString().format('%04x', port.toInteger())
+	return hexport
+}
