@@ -1,7 +1,7 @@
 // Hubitat driver for controlling Sonoff iFan03
 // Original Tasmota driver developed by Brett Sheleski
 // Ported to Hubitat by dkkohler
-// Modified to work with the iFan02 by damondins
+// Modified to work with the iFan03 by damondins
 // Version 1.0.0 - Inital Release
 
 
