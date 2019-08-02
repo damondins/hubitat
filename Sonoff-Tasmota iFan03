@@ -2,6 +2,7 @@
 // Original Tasmota driver developed by Brett Sheleski
 // Ported to Hubitat by dkkohler
 // Modified to work with the iFan03 by damondins
+// Version 1.0.1 - Updated Refresh and Refresh interval
 // Version 1.0.0 - Inital Release
 
 
