@@ -1,4 +1,6 @@
-
+// Original Tasmota driver developed by Brett Sheleski
+// Ported to Hubitat by dkkohler
+// Modified to work with the iFan03 by damondins
 // Hubitat driver for controlling Sonoff iFan03 Light
 // Version 1.0.0
 
