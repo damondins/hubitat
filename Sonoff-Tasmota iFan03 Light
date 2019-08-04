@@ -2,6 +2,7 @@
 // Ported to Hubitat by dkkohler
 // Modified to work with the iFan03 by damondins
 // Hubitat driver for controlling Sonoff iFan03 Light
+// Version 1.0.1 - Updated Refresh and Refresh interval
 // Version 1.0.0
 
 metadata {
@@ -35,14 +36,14 @@ def parse(String description) {
 	if (message?.json) {
 		// current json data format
 		resultJson = message.json
-        log.debug resultJson
+        //log.debug resultJson
 	}
 
 	// determine switch state
-	if ((resultJson?."POWER" in ["ON", 1, "1"])) {
+	if ((resultJson?."POWER1" in ["ON", 1, "1"])) {
 		setSwitchState(true)
 	}
-	else if ((resultJson?."POWER" in ["OFF", 0, "0"])) {
+	else if ((resultJson?."POWER1" in ["OFF", 0, "0"])) {
 		setSwitchState(false)
 	}
 	else {
@@ -71,8 +72,16 @@ def poll() {
 	sendCommand("State", null)
 }
 
+def schedrefresh() {
+    refreshrate = "10"
+	refreshrateint = Integer.parseInt(refreshrate)
+	runIn(refreshrateint, poll)
+	//log.debug refreshrateint
+}
+
 def refresh() {
 	sendCommand("State", null)
+    schedrefresh()
 }
 
 private def sendCommand(String command, payload) {
@@ -80,7 +89,7 @@ private def sendCommand(String command, payload) {
 }
 
 private def sendCommand(String command, String payload) {
-	log.debug "sendCommand(${command}:${payload}) to device at $ipAddress:$port"
+	//log.debug "sendCommand(${command}:${payload}) to device at $ipAddress:$port"
 
 	if (!ipAddress || !port) {
 		log.warn "aborting. ip address or port of device not set"
@@ -111,6 +120,7 @@ private def sendCommand(String command, String payload) {
 			HOST: "${ipAddress}:${port}"
 		]
 	)
+    schedrefresh()
 	return result
 }
 
