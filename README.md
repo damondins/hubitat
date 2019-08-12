@@ -1,6 +1,14 @@
 # hubitat
 Hubitat Device Handlers
 
+Sonoff iFan03 
+New Instructions:
+1. Flash iFan03 with the Tasmota firmware Sonoff.generic.bin that is on my github
+2. Add the Sonoff-Tasmota iFan03 DH to Hubitat
+3. Add a Vitual Device and set the IP address
+
+
+OLD Instructions:
 How to use the Sonoff iFan03 Device Handler
 1. Flash iFan03 with the Tasmota 6.5 or later
 2. Open Tasmota configuration
