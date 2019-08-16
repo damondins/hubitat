@@ -2,6 +2,7 @@
 // Original Tasmota driver developed by Brett Sheleski
 // Ported to Hubitat by dkkohler
 // Modified to work with the iFan03 by damondins
+// Version 1.0.3 - Added Fan control
 // Version 1.0.2 - Added Buzzer control
 // Version 1.0.1 - Updated Refresh and Refresh interval
 // Version 1.0.0 - Inital Release
@@ -13,6 +14,7 @@ metadata {
 		capability "Refresh"
         capability "Switch"
         capability "Switch Level"
+        capability "FanControl"
         //capability "Configuration"
    
 	}
@@ -48,21 +50,25 @@ def parse(String description) {
 	// determine switch state
 	if ((resultJson?."FanSpeed" in ["1", 1, "1"])) {
 		setSwitchState(true)
+        setFanState("low")
         setFanSpeedState("33")
         //log.debug "Fanspeed 1"
 	}
 	else if ((resultJson?."FanSpeed" in ["2", 2, "2"])) {
 		setSwitchState(true)
+        setFanState("medium")
         setFanSpeedState("66")
         //log.debug "Fanspeed 2"        
 	}
 	else if ((resultJson?."FanSpeed" in ["3", 3, "3"])) {
 		setSwitchState(true)
+        setFanState("high")
         setFanSpeedState("99")
         //log.debug "Fanspeed 3"        
 	}
 	else if ((resultJson?."FanSpeed" in ["0", 0, "0"])) {
 		setSwitchState(false)
+        setFanState("off")
         setFanSpeedState("0")
         //log.debug "Fanspeed off"        
 	}
@@ -76,6 +82,10 @@ def setSwitchState(Boolean on) {
 	sendEvent(name: "switch", value: on ? "on" : "off")
 }
 
+def setFanState(value) {
+    sendEvent(name: "speed", value: "$value")
+}
+
 def setFanSpeedState(value) {
     sendEvent(name: "level", value: "$value")
 }
@@ -84,11 +94,63 @@ def setToneState(Boolean on) {
     sendEvent(name: "tone", value: on ? "on" : "off")
 }
 
+def setSpeed(value) {
+    
+    if (value == "off") {
+   		setSwitchState(false)
+        setFanState("off")
+        setFanSpeedState("0")
+        setToneState(alertBeep)
+        if (alertBeep) {
+            sendCommand("Buzzer%201%206%3B%20FanSpeed%200", null)
+        }
+        else {
+            sendCommand("FanSpeed%200", null)
+        }
+    }
+    else if (value == "on" || value == "low") {
+		setSwitchState(true)
+        setFanState("low")
+        setFanSpeedState("33")
+        setToneState(alertBeep)
+        if (alertBeep) {
+            sendCommand("Buzzer%201%3B%20FanSpeed%201", null)
+        }
+        else {
+            sendCommand("FanSpeed%201", null)
+        }
+    }
+    else if (value == "medium-low" || value == "medium") {
+		setSwitchState(true)
+        setFanState("medium")
+        setFanSpeedState("66")
+        setToneState(alertBeep)
+        if (alertBeep) {
+            sendCommand("Buzzer%202%3B%20FanSpeed%202", null)
+        }
+        else {
+            sendCommand("FanSpeed%202", null)
+        }
+    }
+    else if (value == "medium-high" || value == "high") {
+		setSwitchState(true)
+        setFanState("high")
+        setFanSpeedState("99")
+        setToneState(alertBeep)
+        if (alertBeep) {
+            sendCommand("Buzzer%203%3B%20FanSpeed%203", null)
+        }
+        else {
+            sendCommand("FanSpeed%203", null)
+        }
+    }  
+}
 
 def setLevel(value, duration=1) {
     //log.debug value 
     if (value == 0) {
    		setSwitchState(false)
+        setFanState("off")
         setFanSpeedState("0")
         setToneState(alertBeep)
         if (alertBeep) {
@@ -100,6 +162,7 @@ def setLevel(value, duration=1) {
     }
     else if (value > 0 && value <= 33) {
 		setSwitchState(true)
+        setFanState("low")
         setFanSpeedState("33")
         setToneState(alertBeep)
         if (alertBeep) {
@@ -111,6 +174,7 @@ def setLevel(value, duration=1) {
     }
     else if (value > 33 && value <= 66) {
 		setSwitchState(true)
+        setFanState("medium")
         setFanSpeedState("66")
         setToneState(alertBeep)
         if (alertBeep) {
@@ -122,6 +186,7 @@ def setLevel(value, duration=1) {
     }
     else if (value > 66 && value <= 100) {
 		setSwitchState(true)
+        setFanState("high")
         setFanSpeedState("99")
         setToneState(alertBeep)
         if (alertBeep) {
@@ -139,6 +204,7 @@ def push() {
 
 def on() {
     setSwitchState(true)
+    setFanState("low")
     setFanSpeedState("1")
     setToneState(alertBeep)
     if (alertBeep) {
@@ -152,6 +218,7 @@ def on() {
 
 def off() {
 	setSwitchState(false)
+    setFanState("off")
     setFanSpeedState("off")
     setToneState(alertBeep)
     if (alertBeep) {
