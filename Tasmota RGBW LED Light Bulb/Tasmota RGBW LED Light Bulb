@@ -13,7 +13,7 @@ metadata {
 		capability "Switch"
 		capability "SwitchLevel"
         
-        command "white"
+        	command "white"
 	}
 
 	preferences {		
