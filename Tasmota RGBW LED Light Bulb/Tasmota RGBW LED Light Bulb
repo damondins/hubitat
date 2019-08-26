@@ -3,12 +3,14 @@
 // HSB Color Settings by Eric Maycock (erocm123)
 // Modified to work with the tasmota firmware for RGBW LED Light Bulbs using the SYF05 Configuration by damondins
 // Hubitat driver for controlling the tasmota firmware for RGBW LED Light Bulbs using the SYF05 Configuration
+// Version 1.0.1 Fixed capturing the CT commands from Groups & Scenes when asking for a white color
 // Version 1.0.0
 
 metadata {
 	definition(name: "Tasmota RGBW LED Light Bulb", namespace: "damondins", author: "damondins") {
 		capability "Switch"
 		capability "ColorControl"
+        capability "ColorTemperature"
 		capability "Light"
 		capability "Switch"
 		capability "SwitchLevel"
@@ -52,6 +54,12 @@ def off() {
 	sendCommand("Power", "Off")
 }
 
+def setColorTemperature(value)
+{
+    sendEvent(name: "colorTemperature", value: value)
+    white()
+}    
+    
 def setColor(value) {
 	log.debug "HSBColor = "+ value
 	   if (value instanceof Map) {
