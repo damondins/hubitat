@@ -12,8 +12,8 @@ metadata {
 		capability "Switch"
 		capability "SwitchLevel"
         
-        command "Incandescent"
         command "WarmWhite"
+        command "Incandescent"
         command "White"
         command "Daylight"
         command "CoolWhite"
@@ -50,37 +50,37 @@ def parse(String description) {
 	}
 }
 
-def Incandescent()
-{
-    sendEvent(name: "ColorName", value: "Incandescent")
-    sendEvent(name: "colorTemperature", value: "2700")
-    sendCommand("CT", "455")
-}
-
 def WarmWhite()
 {
-    sendEvent(name: "ColorName", value: "Warm White")
+    sendEvent(name: "colorName", value: "Warm White")
     sendEvent(name: "colorTemperature", value: "2200")
     sendCommand("CT", "484")
 }
 
+def Incandescent()
+{
+    sendEvent(name: "colorName", value: "Incandescent")
+    sendEvent(name: "colorTemperature", value: "2700")
+    sendCommand("CT", "455")
+}
+
 def White()
 {
-    sendEvent(name: "ColorName", value: "White")
+    sendEvent(name: "colorName", value: "White")
     sendEvent(name: "colorTemperature", value: "4000")
     sendCommand("CT", "345")
 }
 
 def Daylight()
 {
-    sendEvent(name: "ColorName", value: "Daylight")
+    sendEvent(name: "colorName", value: "Daylight")
     sendEvent(name: "colorTemperature", value: "5500")
     sendCommand("CT", "230")
 }
 
 def CoolWhite()
 {
-    sendEvent(name: "ColorName", value: "Cool White")
+    sendEvent(name: "colorName", value: "Cool White")
     sendEvent(name: "colorTemperature", value: "$TWhigh")
     sendCommand("CT", "153")
 }
@@ -106,12 +106,30 @@ def setColorTemperature(value)
     
 	if (flipvalue < 153) {
         sendEvent(name: "Temp", value: intvalue)
+        sendEvent(name: "colorName", value: "Cool White")
 		sendCommand("CT", "153")
 	} else if (flipvalue > 500) {
         sendEvent(name: "Temp", value: 500)
-		sendCommand("CT", "500")
+		sendEvent(name: "colorName", value: "Warm White")
+        sendCommand("CT", "500")
 	} else {
         sendEvent(name: "Temp", value: value)
+        if (value < 2600) {
+            sendEvent(name: "colorName", value: "Warm White")
+        }
+        else if (value < 3500) {
+            sendEvent(name: "colorName", value: "Incandescent")
+        }
+        else if (value < 4500) {
+            sendEvent(name: "colorName", value: "White")
+        }
+        else if (value < 5500) {
+            sendEvent(name: "colorName", value: "Daylight")
+        }
+        else if (value >=  5500) {
+            sendEvent(name: "colorName", value: "Cool White")
+        }
+        
 		sendCommand("CT", "$flipvalue")
 	}
 }
@@ -133,7 +151,13 @@ def setLevel(v)
 
 def setLevel(value, duration) {
 	sendEvent(name: "level", value: value)
-    sendCommand("Dimmer", value)
+    //Preping for duration functionality
+    if (duration < 2) {
+        sendCommand("Dimmer", value)
+    }
+    else {
+        sendCommand("Dimmer", value)
+    }
 }
 
 private def sendCommand(String command, payload) {
