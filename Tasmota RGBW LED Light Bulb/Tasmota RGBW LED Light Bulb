@@ -130,10 +130,10 @@ def white() {
     sendEvent(name: "hue", value: "0")
     sendEvent(name: "saturation", value: "100")
     sendEvent(name: "level", value: "100")
-	sendEvent(name: "colorMode", value: "white")
+    sendEvent(name: "colorMode", value: "white")
     state.hue = h
-	state.saturation = s
-	state.level = b
+    state.saturation = s
+    state.level = b
     state.colorMode = "white"
     def lvl = state.level
     if (lvl < 1) {
@@ -142,7 +142,7 @@ def white() {
     lvl = lvl * 2.55
     lvl = lvl.toInteger()
     lvl = lvl.toHexString(lvl)
-    sendEvent(name: "Test", value: lvl)
+    
     sendCommand("color", "000000" + "$lvl")
 }
 
