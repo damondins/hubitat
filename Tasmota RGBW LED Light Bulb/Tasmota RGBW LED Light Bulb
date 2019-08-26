@@ -3,6 +3,7 @@
 // HSB Color Settings by Eric Maycock (erocm123)
 // Modified to work with the tasmota firmware for RGBW LED Light Bulbs using the SYF05 Configuration by damondins
 // Hubitat driver for controlling the tasmota firmware for RGBW LED Light Bulbs using the SYF05 Configuration
+// Version 1.0.2 Added Support for Level Duration - Duration can be set from 0 to 7
 // Version 1.0.1 Fixed capturing the CT commands from Groups & Scenes when asking for a white color
 // Version 1.0.0
 
@@ -115,8 +116,7 @@ def setLevel(v)
 def setLevel(v, duration)
 {
     sendEvent(name: "level", value: "${v}")
-    //Preping for duration functionality
-    if (duration < 2) {
+    if (duration == 0) {
         if (state.colorMode == "RGB") {
             setHsb(state.hue,state.saturation, v)    
         }
@@ -124,12 +124,15 @@ def setLevel(v, duration)
             sendCommand("Dimmer", "${v}")
         }
     }
-    else {
+    else if (duration > 0) {
         if (state.colorMode == "RGB") {
             setHsb(state.hue,state.saturation, v)    
         }
         else {
-            sendCommand("Dimmer", "${v}")
+            if (duration > 7) {duration = 7}
+            cdelay = duration * 10
+            DurCommand = "fade%201%3Bspeed%20" + "$duration" + "%3Bdimmer%20" + "$v" + "%3BDelay%20"+ "$cdelay" + "%3Bfade%200"
+            sendCommand("backlog", DurCommand)
         }
    }
 }
@@ -151,7 +154,7 @@ def white() {
     lvl = Math.round(lvl)
     lvl = lvl.toInteger()
     lvl = lvl.toHexString(lvl)
-
+    
     sendCommand("color", "000000" + "$lvl")
 }
 
