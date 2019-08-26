@@ -2,6 +2,7 @@
 // Ported to Hubitat by dkkohler
 // Modified to work with the tasmota firmware for Tuneable White LED Light Bulbs by damondins
 // Hubitat driver for controlling the tasmota firmware for Tuneable White LED Light Bulbs
+// Version 1.0.1 Added Support for Level Duration - Duration can be set from 0 to 7
 // Version 1.0.0
 
 metadata {
@@ -151,12 +152,14 @@ def setLevel(v)
 
 def setLevel(value, duration) {
 	sendEvent(name: "level", value: value)
-    //Preping for duration functionality
-    if (duration < 2) {
+    if (duration == 0) {
         sendCommand("Dimmer", value)
     }
-    else {
-        sendCommand("Dimmer", value)
+    else if (duration > 0) {
+        if (duration > 7) {duration = 7}
+        cdelay = duration * 10
+        DurCommand = "fade%201%3Bspeed%20" + "$duration" + "%3Bdimmer%20" + "$v" + "%3BDelay%20"+ "$cdelay" + "%3Bfade%200"
+        sendCommand("backlog", DurCommand)
     }
 }
 
