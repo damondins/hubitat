@@ -8,9 +8,15 @@ metadata {
 	definition(name: "Tasmota TW LED Light Bulb", namespace: "damondins", author: "damondins") {
 		capability "Switch"
 		capability "ColorTemperature"
-        	capability "Light"
+        capability "Light"
 		capability "Switch"
 		capability "SwitchLevel"
+        
+        command "Incandescent"
+        command "WarmWhite"
+        command "White"
+        command "Daylight"
+        command "CoolWhite"
 	}
 
 	preferences {		
@@ -42,24 +48,87 @@ def parse(String description) {
 		resultJson = message.json
         log.debug resultJson
 	}
-
-   
 }
 
-def setSwitchState(Boolean on) {
-	sendEvent(name: "switch", value: on ? "on" : "off")
+def Incandescent()
+{
+    sendEvent(name: "ColorName", value: "Incandescent")
+    sendEvent(name: "colorTemperature", value: "2700")
+    sendCommand("CT", "455")
 }
 
-def push() {
-	sendCommand("Power", "Toggle")
+def WarmWhite()
+{
+    sendEvent(name: "ColorName", value: "Warm White")
+    sendEvent(name: "colorTemperature", value: "2200")
+    sendCommand("CT", "484")
+}
+
+def White()
+{
+    sendEvent(name: "ColorName", value: "White")
+    sendEvent(name: "colorTemperature", value: "4000")
+    sendCommand("CT", "345")
+}
+
+def Daylight()
+{
+    sendEvent(name: "ColorName", value: "Daylight")
+    sendEvent(name: "colorTemperature", value: "5500")
+    sendCommand("CT", "230")
+}
+
+def CoolWhite()
+{
+    sendEvent(name: "ColorName", value: "Cool White")
+    sendEvent(name: "colorTemperature", value: "$TWhigh")
+    sendCommand("CT", "153")
+}
+
+def setColorTemperature(value)
+{
+	state.colorMode = "CT"
+	sendEvent(name: "colorMode", value: "CT")
+	log.debug "ColorTemp = " + value
+	def intvalue = value.toInteger()
+	def intTWlow = TWlow.toInteger()
+	def intTWhigh = TWhigh.toInteger()
+	
+	def kelvindiff = intTWhigh - intTWlow
+	def tasmotadiff = 348
+	def kelvinscale = kelvindiff / tasmotadiff
+	kelvinscale = Math.round(kelvinscale)
+	convertedvalue =  intvalue / kelvinscale
+	flipvalue = 153 + (500 - convertedvalue) 
+	flipvalue = Math.round(flipvalue)
+	
+    sendEvent(name: "colorTemperature", value: intvalue)
+    
+	if (flipvalue < 153) {
+        sendEvent(name: "Temp", value: intvalue)
+		sendCommand("CT", "153")
+	} else if (flipvalue > 500) {
+        sendEvent(name: "Temp", value: 500)
+		sendCommand("CT", "500")
+	} else {
+        sendEvent(name: "Temp", value: value)
+		sendCommand("CT", "$flipvalue")
+	}
 }
 
 def on() {
-	sendCommand("Power", "On")
+	sendEvent(name: "switch", value: "on")
+    sendCommand("Power", "On")
 }
 
 def off() {
+    sendEvent(name: "switch", value: "off")
 	sendCommand("Power", "Off")
+}
+
+def setLevel(v)
+{
+    setLevel(v, 0)
 }
 
 def setLevel(value, duration) {
