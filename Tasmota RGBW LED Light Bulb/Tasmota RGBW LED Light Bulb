@@ -1,1 +1,197 @@
-temp
+// Original Tasmota driver developed by Brett Sheleski
+// Ported to Hubitat by dkkohler
+// HSB Color Settings by Eric Maycock (erocm123)
+// Modified to work with the tasmota firmware for RGBW LED Light Bulbs using the SYF05 Configuration by damondins
+// Hubitat driver for controlling the tasmota firmware for RGBW LED Light Bulbs using the SYF05 Configuration
+// Version 1.0.0
+
+metadata {
+	definition(name: "Tasmota RGBW LED Light Bulb", namespace: "damondins", author: "damondins") {
+		capability "Switch"
+		capability "ColorControl"
+		capability "Light"
+		capability "Switch"
+		capability "SwitchLevel"
+        
+        command "white"
+	}
+
+	preferences {		
+		section("Sonoff Host") {
+            input(name: "ipAddress", type: "string", title: "IP Address", displayDuringSetup: true, required: true)
+			input(name: "port", type: "number", title: "Port", displayDuringSetup: true, required: true, defaultValue: 80)
+		}
+
+		section("Authentication") {
+			input(name: "username", type: "string", title: "Username", displayDuringSetup: false, required: false)
+			input(name: "password", type: "password", title: "Password (sent cleartext)", displayDuringSetup: false, required: false)
+		}
+	}
+}
+
+def parse(String description) {
+	def message = parseLanMessage(description)
+	def isParsed = false;
+
+	// parse result from current formats
+	def resultJson = {}
+	if (message?.json) {
+		// current json data format
+		resultJson = message.json
+        log.debug resultJson
+	}  
+}
+
+def on() {
+    sendEvent(name: "switch", value: "on")
+	sendCommand("Power", "On")
+}
+
+def off() {
+    sendEvent(name: "switch", value: "off")
+	sendCommand("Power", "Off")
+}
+
+def setColor(value) {
+	log.debug "HSBColor = "+ value
+	   if (value instanceof Map) {
+        def h = value.containsKey("hue") ? value.hue : null
+        def s = value.containsKey("saturation") ? value.saturation : null
+        def b = value.containsKey("level") ? value.level : null
+    	setHsb(h, s, b)
+    } else {
+        log.warn "Invalid argument for setColor: ${value}"
+    }
+}
+
+def setHsb(h,s,b)
+{
+	log.debug("setHSB - ${h},${s},${b}")
+	myh = h*4
+	if( myh > 360 ) { myh = 360 }
+	hsbcmd = "${myh},${s},${b}"
+	log.debug "Cmd = ${hsbcmd}"
+    state.hue = h
+	state.saturation = s
+	state.level = b
+	state.colorMode = "RGB"
+    sendEvent(name: "hue", value: "${h}")
+    sendEvent(name: "saturation", value: "${s}")
+    sendEvent(name: "level", value: "${b}")
+	if (hsbcmd == "0,0,100") {
+        state.colorMode = "white"
+        sendEvent(name: "colorMode", value: "CT")
+        white()
+        }
+    else {
+        sendEvent(name: "colorMode", value: "RGB")
+        sendCommand("hsbcolor", hsbcmd)
+    }
+}
+
+def setHue(h)
+{
+    setHsb(h,state.saturation,state.level)
+}
+
+def setSaturation(s)
+{
+	setHsb(state.hue,s,state.level)
+}
+
+def setLevel(v)
+{
+    setLevel(v, 0)
+}
+
+def setLevel(v, duration)
+{
+    sendEvent(name: "level", value: "${v}")
+    //Preping for duration functionality
+    if (duration < 2) {
+        if (state.colorMode == "RGB") {
+            setHsb(state.hue,state.saturation, v)    
+        }
+        else {
+            sendCommand("Dimmer", "${v}")
+        }
+    }
+    else {
+        if (state.colorMode == "RGB") {
+            setHsb(state.hue,state.saturation, v)    
+        }
+        else {
+            sendCommand("Dimmer", "${v}")
+        }
+   }
+}
+
+def white() {
+    sendEvent(name: "hue", value: "0")
+    sendEvent(name: "saturation", value: "100")
+    sendEvent(name: "level", value: "100")
+	sendEvent(name: "colorMode", value: "white")
+    state.hue = h
+	state.saturation = s
+	state.level = b
+    state.colorMode = "white"
+    def lvl = state.level
+    if (lvl < 1) {
+        lvl = 1
+    }
+    lvl = lvl * 2.55
+    lvl = lvl.toInteger()
+    lvl = lvl.toHexString(lvl)
+    sendEvent(name: "Test", value: lvl)
+    sendCommand("color", "000000" + "$lvl")
+}
+
+private def sendCommand(String command, payload) {
+    sendCommand(command, payload.toString())
+}
+
+private def sendCommand(String command, String payload) {
+	//log.debug "sendCommand(${command}:${payload}) to device at $ipAddress:$port"
+
+	if (!ipAddress || !port) {
+		log.warn "aborting. ip address or port of device not set"
+		return null;
+	}
+	def hosthex = convertIPtoHex(ipAddress)
+	def porthex = convertPortToHex(port)
+
+	def path = "/cm"
+	if (payload){
+		path += "?cmnd=${command}%20${payload}"
+	}
+	else{
+		path += "?cmnd=${command}"
+	}
+
+	if (username){
+		path += "&user=${username}"
+		if (password){
+			path += "&password=${password}"
+		}
+	}
+
+	def result = new hubitat.device.HubAction(
+		method: "GET",
+		path: path,
+		headers: [
+			HOST: "${ipAddress}:${port}"
+		]
+	)
+
+    return result
+}
+
+private String convertIPtoHex(ipAddress) { 
+	String hex = ipAddress.tokenize( '.' ).collect {  String.format( '%02x', it.toInteger() ) }.join()
+	return hex
+}
+
+private String convertPortToHex(port) {
+	String hexport = port.toString().format('%04x', port.toInteger())
+	return hexport
+}
