@@ -13,7 +13,7 @@ metadata {
 		capability "Switch"
 		capability "SwitchLevel"
         
-        	command "white"
+        command "white"
 	}
 
 	preferences {		
@@ -130,19 +130,20 @@ def white() {
     sendEvent(name: "hue", value: "0")
     sendEvent(name: "saturation", value: "100")
     sendEvent(name: "level", value: "100")
-    sendEvent(name: "colorMode", value: "white")
-    state.hue = h
-    state.saturation = s
-    state.level = b
+	sendEvent(name: "colorMode", value: "white")
+    state.hue = state.hue
+	state.saturation = state.saturation
+	state.level = state.level
     state.colorMode = "white"
     def lvl = state.level
     if (lvl < 1) {
         lvl = 1
     }
     lvl = lvl * 2.55
+    lvl = Math.round(lvl)
     lvl = lvl.toInteger()
     lvl = lvl.toHexString(lvl)
-    
+
     sendCommand("color", "000000" + "$lvl")
 }
 
