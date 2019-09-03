@@ -3,6 +3,7 @@
 // HSB Color Settings by Eric Maycock (erocm123)
 // Modified to work with the tasmota firmware for RGBW LED Light Bulbs using the SYF05 Configuration by damondins
 // Hubitat driver for controlling the tasmota firmware for RGBW LED Light Bulbs using the SYF05 Configuration
+// Version 1.0.3 Added Support for LED Schemes
 // Version 1.0.2 Added Support for Level Duration - Duration can be set from 0 to 7
 // Version 1.0.1 Fixed capturing the CT commands from Groups & Scenes when asking for a white color
 // Version 1.0.0
@@ -17,7 +18,14 @@ metadata {
 		capability "SwitchLevel"
         
         command "white"
-	}
+        command "ModeNext"
+        command "ModePrevious"
+        command "ModeSingleColor"
+        command "ModeWakeUp"
+        command "ModeCycleUpColors"
+        command "ModeCycleDownColors"
+        command "ModeRandomColors"
+    }
 
 	preferences {		
 		section("Sonoff Host") {
@@ -29,6 +37,10 @@ metadata {
 			input(name: "username", type: "string", title: "Username", displayDuringSetup: false, required: false)
 			input(name: "password", type: "password", title: "Password (sent cleartext)", displayDuringSetup: false, required: false)
 		}
+
+        section("Settings") {
+			//input(name: "fade", type: "bool", title: "Fade", displayDuringSetup: false, required: false, defaultValue: false)
+		}        
 	}
 }
 
@@ -156,6 +168,58 @@ def white() {
     lvl = lvl.toHexString(lvl)
     
     sendCommand("color", "000000" + "$lvl")
+}
+
+def ModeNext() {
+    if (state.mode < 4) {
+        state.mode = state.mode + 1
+    }
+    else {
+        state.mode = 0
+    }
+    sendEvent(name: "mode", value: "${state.mode}")
+    sendCommand("Scheme", "${state.mode}")
+}
+
+def ModePrevious() {
+    if (state.mode > 0) {
+        state.mode = state.mode - 1
+    }
+    else {
+        state.mode = 4
+    }
+    sendEvent(name: "mode", value: "${state.mode}")
+    sendCommand("Scheme", "${state.mode}")
+}
+
+def ModeSingleColor() {
+    state.mode = 0
+    sendEvent(name: "mode", value: "${state.mode}")
+    sendCommand("Scheme", "0")
+}
+
+def ModeWakeUp() {
+    state.mode = 1
+    sendEvent(name: "mode", value: "${state.mode}")
+    sendCommand("Scheme", "1")
+}
+
+def ModeCycleUpColors() {
+    state.mode = 2
+    sendEvent(name: "mode", value: "${state.mode}")
+    sendCommand("Scheme", "2")
+}
+
+def ModeCycleDownColors() {
+    state.mode = 3
+    sendEvent(name: "mode", value: "${state.mode}")
+    sendCommand("Scheme", "3")
+}
+
+def ModeRandomColors() {
+    state.mode = 4
+    sendEvent(name: "mode", value: "${state.mode}")
+    sendCommand("Scheme", "4")
 }
 
 private def sendCommand(String command, payload) {
