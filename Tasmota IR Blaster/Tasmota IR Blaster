@@ -1,0 +1,258 @@
+// Original Tasmota driver developed by Brett Sheleski
+// Ported to Hubitat by dkkohler
+// Modified to work with the tasmota firmware for IR Blaster by damondins
+// Hubitat driver for controlling the tasmota firmware for IR Blaster
+// Version 1.0.0 - 9/5/2019
+
+metadata {
+	definition(name: "Tasmota IR Blaster", namespace: "damondins", author: "damondins") {
+		capability "TV"
+        
+        command "PowerOn"
+        command "PowerOff"
+        command "HDMI1"
+        command "HDMI2"
+        command "HDMI3"
+        command "HDMI4"
+        command "volumeUp_5"
+        command "volumeDown_5"
+        command "Mute"
+        command "Channel",    ["Number"]
+    }
+
+	preferences {		
+		section("Sonoff Host") {
+            input(name: "ipAddress", type: "string", title: "IP Address", displayDuringSetup: true, required: true)
+			input(name: "port", type: "number", title: "Port", displayDuringSetup: true, required: true, defaultValue: 80)
+		}
+
+		section("Authentication") {
+			input(name: "username", type: "string", title: "Username", displayDuringSetup: false, required: false)
+			input(name: "password", type: "password", title: "Password (sent cleartext)", displayDuringSetup: false, required: false)
+		}
+
+        section("Settings") {
+			input(name: "poweroffcode", type: "string", title: "Power Off Code", displayDuringSetup: false, required: false)
+            input(name: "poweroncode", type: "string", title: "Power On Code", displayDuringSetup: false, required: false)
+            
+            input(name: "mutecode", type: "string", title: "Mute Code", displayDuringSetup: false, required: false)
+            input(name: "volumeupcode", type: "string", title: "Volume Up Code", displayDuringSetup: false, required: false)
+            input(name: "volumedowncode", type: "string", title: "Volume Down Code", displayDuringSetup: false, required: false)
+            input(name: "channelupcode", type: "string", title: "Channel Up Code", displayDuringSetup: false, required: false)
+            input(name: "channeldowncode", type: "string", title: "Channel Down Code", displayDuringSetup: false, required: false)
+            input(name: "hdmi1code", type: "string", title: "HDMI1 Code", displayDuringSetup: false, required: false)
+            input(name: "hdmi2code", type: "string", title: "HDMI2 Code", displayDuringSetup: false, required: false)
+            input(name: "hdmi3code", type: "string", title: "HDMI3 Code", displayDuringSetup: false, required: false)
+            input(name: "hdmi4code", type: "string", title: "HDMI4 Code", displayDuringSetup: false, required: false)
+            
+            input(name: "channel0code", type: "string", title: "Channel 0 Code", displayDuringSetup: false, required: false)
+            input(name: "channel1code", type: "string", title: "Channel 1 Code", displayDuringSetup: false, required: false)
+            input(name: "channel2code", type: "string", title: "Channel 2 Code", displayDuringSetup: false, required: false)
+            input(name: "channel3code", type: "string", title: "Channel 3 Code", displayDuringSetup: false, required: false)
+            input(name: "channel4code", type: "string", title: "Channel 4 Code", displayDuringSetup: false, required: false)
+            input(name: "channel5code", type: "string", title: "Channel 5 Code", displayDuringSetup: false, required: false)
+            input(name: "channel6code", type: "string", title: "Channel 6 Code", displayDuringSetup: false, required: false)
+            input(name: "channel7code", type: "string", title: "Channel 7 Code", displayDuringSetup: false, required: false)
+            input(name: "channel8code", type: "string", title: "Channel 8 Code", displayDuringSetup: false, required: false)
+            input(name: "channel9code", type: "string", title: "Channel 9 Code", displayDuringSetup: false, required: false)
+		}        
+	}
+}
+
+def parse(String description) {
+	def message = parseLanMessage(description)
+	def isParsed = false;
+
+	// parse result from current formats
+	def resultJson = {}
+	if (message?.json) {
+		// current json data format
+		resultJson = message.json
+        log.debug resultJson
+	}  
+}
+
+def PowerOn() {
+    sendEvent(name: "power", value: "on")
+    code = escapestring("$poweroncode")
+	sendCommand("irsend", "$code")
+}
+
+def PowerOff() {
+    sendEvent(name: "power", value: "off")
+    code = escapestring("$poweroffcode")
+    sendCommand("irsend", "$code")
+}
+
+def HDMI1() {
+    sendEvent(name: "input", value: "HDMI1")
+    code = escapestring("$hdmi1code")
+    sendCommand("irsend", "$code")
+}
+
+def HDMI2() {
+    sendEvent(name: "input", value: "HDMI2")
+    code = escapestring("$hdmi2code")
+    sendCommand("irsend", "$code")
+}
+
+def HDMI3() {
+    sendEvent(name: "input", value: "HDMI3")
+    code = escapestring("$hdmi3code")
+    sendCommand("irsend", "$code")
+}
+
+def HDMI4() {
+    sendEvent(name: "input", value: "HDMI4")
+    code = escapestring("$hdmi4code")
+    sendCommand("irsend", "$code")
+}
+
+def Mute() {
+    code = escapestring("$mutecode")
+    sendCommand("irsend", "$code")
+}
+
+def volumeDown() {
+    code = escapestring("$volumedowncode")
+    sendCommand("irsend", "$code")
+}
+
+def volumeUp() {
+    code = escapestring("$volumeupcode")
+    sendCommand("irsend", "$code")
+}
+
+def channelDown() {
+    code = escapestring("$channeldowncode")
+    sendCommand("irsend", "$code")
+}
+
+def channelUp() {
+    code = escapestring("$channelupcode")
+    sendCommand("irsend", "$code")
+}
+
+def volumeDown_5() {
+    code = escapestring("$volumedowncode")
+    code = "irsend%20" + code + "%3Birsend%20" + code + "%3Birsend%20" + code + "%3Birsend%20" + code + "%3Birsend%20" + code + "%3Birsend%20" + code
+    sendCommand("backlog", "$code")
+}
+
+def volumeUp_5() {
+    code = escapestring("$volumeupcode")
+    code = "irsend%20" + code + "%3Birsend%20" + code + "%3Birsend%20" + code + "%3Birsend%20" + code + "%3Birsend%20" + code + "%3Birsend%20" + code
+    sendCommand("backlog", "$code")
+}
+
+def Channel(intChannel) {
+    channel = intChannel.toString()
+    clength = channel.length()
+    def channelarray = new String[clength]
+    def code = ""
+    def cnt = 0
+    while(cnt < clength) {
+        chan1 = channel.take(1)
+        channel = channel.drop(1)
+        intchan = chan1.toInteger()
+        switch(intchan) {
+            case 0:
+                channelarray[cnt] = escapestring("$channel0code")
+                break
+            case 1:
+                channelarray[cnt] = escapestring("$channel1code")
+                break
+            case 2:
+                channelarray[cnt] = escapestring("$channel2code")
+                break
+            case 3:
+                channelarray[cnt] = escapestring("$channel3code")
+                break
+            case 4:
+                channelarray[cnt] = escapestring("$channel4code")
+                break
+            case 5:
+                channelarray[cnt] = escapestring("$channel5code")
+                break
+            case 6:
+                channelarray[cnt] = escapestring("$channel6code")
+                break
+            case 7:
+                channelarray[cnt] = escapestring("$channel7code")
+                break
+            case 8:
+                channelarray[cnt] = escapestring("$channel8code")
+                break
+            case 9:
+                channelarray[cnt] = escapestring("$channel9code")
+                break
+        } 
+        code += "irsend%20" + channelarray.getAt(cnt) 
+        if (cnt + 1 < clength) {
+            code += "%3B"
+        }
+        cnt ++
+    }
+    sendEvent(name: "channel", value: "$intChannel")
+    sendCommand("backlog", "$code")
+}
+
+private def sendCommand(String command, payload) {
+    sendCommand(command, payload.toString())
+}
+
+private def escapestring(astr) {
+    astr = astr.replaceAll("\\{","%7B")
+    astr = astr.replaceAll("\\}","%7D")
+    astr = astr.replaceAll("\\:","%3A")
+    astr = astr.replaceAll(" ","%20")
+    astr = astr.replaceAll("\\,","%2C")
+    astr = astr.replaceAll('"',"%22")
+    return astr
+}
+
+private def sendCommand(String command, String payload) {
+	log.debug "sendCommand(${command}:${payload}) to device at $ipAddress:$port"
+
+	if (!ipAddress || !port) {
+		log.warn "aborting. ip address or port of device not set"
+		return null;
+	}
+	def hosthex = convertIPtoHex(ipAddress)
+	def porthex = convertPortToHex(port)
+
+	def path = "/cm"
+	if (payload){
+		path += "?cmnd=${command}%20${payload}"
+	}
+	else{
+		path += "?cmnd=${command}"
+	}
+
+	if (username){
+		path += "&user=${username}"
+		if (password){
+			path += "&password=${password}"
+		}
+	}
+
+	def result = new hubitat.device.HubAction(
+		method: "GET",
+		path: path,
+		headers: [
+			HOST: "${ipAddress}:${port}"
+		]
+	)
+
+    return result
+}
+
+private String convertIPtoHex(ipAddress) { 
+	String hex = ipAddress.tokenize( '.' ).collect {  String.format( '%02x', it.toInteger() ) }.join()
+	return hex
+}
+
+private String convertPortToHex(port) {
+	String hexport = port.toString().format('%04x', port.toInteger())
+	return hexport
+}
