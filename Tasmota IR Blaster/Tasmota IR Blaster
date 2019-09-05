@@ -212,7 +212,7 @@ private def escapestring(astr) {
 }
 
 private def sendCommand(String command, String payload) {
-	log.debug "sendCommand(${command}:${payload}) to device at $ipAddress:$port"
+	//log.debug "sendCommand(${command}:${payload}) to device at $ipAddress:$port"
 
 	if (!ipAddress || !port) {
 		log.warn "aborting. ip address or port of device not set"
