@@ -44,10 +44,10 @@ metadata {
 			input(name: "TWhigh", type: "string", title: "Tuneable White High Level", displayDuringSetup: true, required: false, defaultValue: "6600")
 		}
         section("Logging") {
-            //standard logging options
-            input(name: "logEnable", type: "bool", title: "Enable debug logging", defaultValue: true)
-            input(name: "txtEnable", type: "bool", title: "Enable descriptionText logging", defaultValue: true)
-        }      
+        //standard logging options
+        input(name: "logEnable", type: "bool", title: "Enable debug logging", defaultValue: true)
+        input(name: "txtEnable", type: "bool", title: "Enable descriptionText logging", defaultValue: true)
+        }
 	}
 }
 
@@ -84,7 +84,7 @@ def setColorTemperature(value)
 	def intTWlow = TWlow.toInteger()
 	def intTWhigh = TWhigh.toInteger()
     def intadjvalue = (intvalue - intTWlow)
-	
+    
 	def kelvindiff = intTWhigh - intTWlow
 	def tasmotadiff = 348
 	def kelvinscale = kelvindiff / tasmotadiff
