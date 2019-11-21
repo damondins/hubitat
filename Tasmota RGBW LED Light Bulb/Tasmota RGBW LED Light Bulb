@@ -69,8 +69,20 @@ def off() {
 
 def setColorTemperature(value)
 {
-    sendEvent(name: "colorTemperature", value: value)
+    log.debug "Sending White"
     white()
+    def OldValue = value
+    def OldMin = 2700
+    def OldMax = 6600
+    def NewMin = 153
+    def NewMax = 500
+    def NewValue = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin
+    NewValue = Math.round(NewValue)
+    NewValue = NewValue.toInteger()
+    log.debug NewValue
+    sendEvent(name: "colorTemperature", value: value)
+    sendCommand("CT", NewValue)
+    
 }    
     
 def setColor(value) {
