@@ -40,7 +40,14 @@ metadata {
 
         section("Settings") {
 			//input(name: "fade", type: "bool", title: "Fade", displayDuringSetup: false, required: false, defaultValue: false)
-		}        
+            input(name: "TWlow", type: "string", title: "Tuneable White Low Level", displayDuringSetup: true, required: false, defaultValue: "2700")
+			input(name: "TWhigh", type: "string", title: "Tuneable White High Level", displayDuringSetup: true, required: false, defaultValue: "6600")
+		}
+        section("Logging") {
+            //standard logging options
+            input(name: "logEnable", type: "bool", title: "Enable debug logging", defaultValue: true)
+            input(name: "txtEnable", type: "bool", title: "Enable descriptionText logging", defaultValue: true)
+        }      
 	}
 }
 
@@ -69,21 +76,56 @@ def off() {
 
 def setColorTemperature(value)
 {
-    log.debug "Sending White"
-    white()
-    def OldValue = value
-    def OldMin = 2700
-    def OldMax = 6600
-    def NewMin = 153
-    def NewMax = 500
-    def NewValue = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin
-    NewValue = Math.round(NewValue)
-    NewValue = NewValue.toInteger()
-    log.debug NewValue
-    sendEvent(name: "colorTemperature", value: value)
-    sendCommand("CT", NewValue)
+	white()
+    state.colorMode = "CT"
+	sendEvent(name: "colorMode", value: "CT")
+	log.debug "ColorTemp = " + value
+	def intvalue = value.toInteger()
+	def intTWlow = TWlow.toInteger()
+	def intTWhigh = TWhigh.toInteger()
+    def intadjvalue = (intvalue - intTWlow)
+	
+	def kelvindiff = intTWhigh - intTWlow
+	def tasmotadiff = 348
+	def kelvinscale = kelvindiff / tasmotadiff
+	//kelvinscale = Math.round(kelvinscale)
+	convertedvalue =  intadjvalue / kelvinscale
+    convertedvalue = Math.round(convertedvalue)
+	flipvalue = 153 + (348 - convertedvalue) 
+	flipvalue = Math.round(flipvalue)
+    log.debug "flipvalue " + flipvalue
+	
+    sendEvent(name: "colorTemperature", value: intvalue)
     
-}    
+	if (flipvalue < 153) {
+        sendEvent(name: "Temp", value: intvalue)
+        sendEvent(name: "colorName", value: "Cool White")
+		sendCommand("CT", "153")
+	} else if (flipvalue > 500) {
+        sendEvent(name: "Temp", value: 500)
+		sendEvent(name: "colorName", value: "Warm White")
+        sendCommand("CT", "500")
+	} else {
+        sendEvent(name: "Temp", value: value)
+        if (value < 2600) {
+            sendEvent(name: "colorName", value: "Warm White")
+        }
+        else if (value < 3500) {
+            sendEvent(name: "colorName", value: "Incandescent")
+        }
+        else if (value < 4500) {
+            sendEvent(name: "colorName", value: "White")
+        }
+        else if (value < 5500) {
+            sendEvent(name: "colorName", value: "Daylight")
+        }
+        else if (value >=  5500) {
+            sendEvent(name: "colorName", value: "Cool White")
+        }
+        
+		sendCommand("CT", "$flipvalue")
+	}
+} 
     
 def setColor(value) {
 	log.debug "HSBColor = "+ value
